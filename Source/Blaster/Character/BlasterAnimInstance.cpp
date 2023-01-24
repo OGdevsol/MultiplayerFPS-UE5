@@ -8,9 +8,10 @@
 
 void UBlasterAnimInstance::NativeInitializeAnimation()
 {
+	BlasterCharacter=Cast<ABlasterCharacter>(TryGetPawnOwner());
 	Super::NativeInitializeAnimation();
 
-	BlasterCharacter=Cast<ABlasterCharacter>(TryGetPawnOwner());
+	
 }
 
 void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
