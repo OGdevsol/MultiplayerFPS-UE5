@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+//#include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
 
@@ -14,9 +16,9 @@ class BLASTER_API ABlasterCharacter : public ACharacter
 public:
 	ABlasterCharacter();
 	virtual void Tick(float DeltaTime) override;
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 protected:
 	virtual void BeginPlay() override;
 
@@ -24,6 +26,10 @@ protected:
 	void MoveRight(float Value);
 	void Turn(float Value);
 	void LookUp(float Value);
+	void EquipButtonPressed();
+	void CrouchButtonPressed();
+	void AimButtonPressed();
+	void AimButtonReleased();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -34,13 +40,24 @@ private:
 	
     UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	class UWidgetComponent* OverheadWidget;
-	
-	
-	
-		
 
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
+	class AWeapon* OverlappingWeapon;
+
+	UPROPERTY(VisibleAnywhere)
+	UCombatComponent* Combat;
+
+	UFUNCTION(Server,Reliable) // RPC for functions called on clients but executed on server
+	void ServerEquipButtonPressed();
+	
+UFUNCTION()
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated
 
 public:
+	 void SetOverlappingWeapon(AWeapon* Weapon); // As soon as the value of overlapping weapon changes, it will replicate
+	bool IsWeaponEquipped();
+
+	bool IsAiming();
 
 	
 
