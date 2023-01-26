@@ -9,6 +9,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Components/CapsuleComponent.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -32,6 +33,9 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat->SetIsReplicated(true); //Designated to be replicating. Components dont neet to be registered to be replicated.
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch=true;
+
+//	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+	//GetMesh()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
 }
 
 
