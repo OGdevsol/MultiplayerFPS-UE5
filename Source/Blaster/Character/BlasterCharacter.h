@@ -30,6 +30,7 @@ protected:
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
+	void AimOffset(float DeltaTime);
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -49,6 +50,10 @@ private:
 
 	UFUNCTION(Server,Reliable) // RPC for functions called on clients but executed on server
 	void ServerEquipButtonPressed();
+
+	float AO_YAW;
+	float AO_PITCH;
+	FRotator StartingAimRotation;
 	
 UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated
@@ -58,6 +63,9 @@ public:
 	bool IsWeaponEquipped();
 
 	bool IsAiming();
+
+	FORCEINLINE float GetAO_YAW() const {return AO_YAW;}
+	FORCEINLINE float GetAO_PITCH() const {return AO_PITCH;}
 
 	
 
