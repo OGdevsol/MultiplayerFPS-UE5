@@ -32,11 +32,10 @@ ABlasterCharacter::ABlasterCharacter()
 
 	Combat=CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true); //Designated to be replicating. Components dont neet to be registered to be replicated.
-
 	GetCharacterMovement()->NavAgentProps.bCanCrouch=true;
-
-//	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+    //GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
 	//GetMesh()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+	TurningInPlace=ETurningInPlace::ETIP_NOTTURNING;
 }
 
 
@@ -160,6 +159,14 @@ bool ABlasterCharacter::IsAiming()
 	return (Combat && Combat->bAiming);
 }
 
+AWeapon* ABlasterCharacter::GetEquippedWeapon()
+{
+	if (Combat==nullptr) return nullptr;
+	return Combat->EquippedWeapon;
+		
+	
+}
+
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
@@ -211,18 +218,47 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation,StartingAimRotation);
 		AO_YAW=DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw=false;
+		TurnInPlace(DeltaTime);
 	}
 	if (Speed>0.f||bIsInAir) // Running or jumping
 	{
 		StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
 		AO_YAW=0.f;
 		bUseControllerRotationYaw=true;
+		TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
+		
 
 	}
-AO_PITCH = GetBaseAimRotation().Pitch;
+AO_PITCH = GetBaseAimRotation().Pitch; //Will malfunction on clients if not dealth with according to bitwise operations as angle values are compressed and then sent, when decompressed, value will be changed from negative to a bitwise compatible positive value
+	if (AO_PITCH>90.f && !IsLocallyControlled())
+	{
+		//map pitch from 270-360 to -90-0 >>>>>> the former value is what we get when angles are compressed and then sent over the network and decompressed>>>>>result, malfunction in pitch values of clients for users
+		FVector2d InRange(270.f,360.f);
+		FVector2d OutRange(-90.f,0.f);
+		AO_PITCH = FMath::GetMappedRangeValueClamped(InRange,OutRange,AO_PITCH);
+	}
+	/*if (HasAuthority() && !IsLocallyControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AO_PITCH: %f"),AO_PITCH);
+	}*/
+	
 	
 }
 
+
+void ABlasterCharacter::TurnInPlace(float DeltaTime)
+{
+	// UE_LOG(LogTemp, Warning, TEXT("AO_YAW: %f"),AO_YAW);
+	if (AO_YAW>90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_RIGHT;
+	}
+	else if (AO_YAW< -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_LEFT;
+
+	}
+}
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {

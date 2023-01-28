@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 //#include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/TurningInPlace.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "GameFramework/Character.h"
 #include "BlasterCharacter.generated.h"
@@ -54,6 +55,8 @@ private:
 	float AO_YAW;
 	float AO_PITCH;
 	FRotator StartingAimRotation;
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
 	
 UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated
@@ -66,6 +69,8 @@ public:
 
 	FORCEINLINE float GetAO_YAW() const {return AO_YAW;}
 	FORCEINLINE float GetAO_PITCH() const {return AO_PITCH;}
+	AWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const {return TurningInPlace;}
 
 	
 

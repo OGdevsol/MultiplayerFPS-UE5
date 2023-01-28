@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Blaster/TurningInPlace.h"
 #include "BlasterAnimInstance.generated.h"
+
 
 /**
  * 
@@ -30,6 +32,8 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category= Movement,meta =(AllowPrivateAccess="true"))
 	bool bWeaponEquipped;
+
+	class AWeapon* EquippedWeapon;
 	UPROPERTY(BlueprintReadOnly, Category= Movement,meta =(AllowPrivateAccess="true"))
 	bool bIsCrouched;
 	UPROPERTY(BlueprintReadOnly, Category= Movement,meta =(AllowPrivateAccess="true"))
@@ -47,4 +51,8 @@ private:
 	float AO_YAW;
 	UPROPERTY(BlueprintReadOnly, Category= Movement,meta =(AllowPrivateAccess="true"))
 	float AO_PITCH;
+	UPROPERTY(BlueprintReadOnly, Category= Movement,meta =(AllowPrivateAccess="true"))
+	FTransform LeftHandTransform;
+	UPROPERTY(BlueprintReadOnly, Category= Movement,meta =(AllowPrivateAccess="true"))
+	ETurningInPlace TurningInPlace;
 };
