@@ -2,6 +2,8 @@
 
 
 #include "BlasterCharacter.h"
+
+#include "Animation/AnimNotifies/AnimNotify_PlaySound.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
@@ -11,6 +13,7 @@
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Misc/LowLevelTestAdapter.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -30,12 +33,17 @@ ABlasterCharacter::ABlasterCharacter()
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(RootComponent);
 
-	Combat=CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
-	Combat->SetIsReplicated(true); //Designated to be replicating. Components dont neet to be registered to be replicated.
-	GetCharacterMovement()->NavAgentProps.bCanCrouch=true;
-    //GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	Combat->SetIsReplicated(true);
+	//Designated to be replicating. Components dont neet to be registered to be replicated.
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
 	//GetMesh()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
-	TurningInPlace=ETurningInPlace::ETIP_NOTTURNING;
+	TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
+
+	NetUpdateFrequency = 66.f;
+	MinNetUpdateFrequency = 33.f;
+	//Optimized and widely used values for updating replications between server and clients for the game
 }
 
 
@@ -62,7 +70,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABlasterCharacter::Jump);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABlasterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABlasterCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &ABlasterCharacter::Turn);
@@ -71,7 +79,10 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABlasterCharacter::CrouchButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ABlasterCharacter::AimButtonPressed);
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABlasterCharacter::AimButtonReleased);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
 }
+
 void ABlasterCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
@@ -81,6 +92,19 @@ void ABlasterCharacter::PostInitializeComponents()
 	}
 }
 
+void ABlasterCharacter::PlayFireMontage(bool bAiming)
+{
+	if (Combat==nullptr || Combat->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && FireWeaponMontage)
+	{
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		SectionName = bAiming ? FName("RifleAim"): FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+	
+}
 
 
 void ABlasterCharacter::MoveForward(float Value)
@@ -116,7 +140,7 @@ void ABlasterCharacter::LookUp(float Value)
 
 void ABlasterCharacter::EquipButtonPressed()
 {
-	if (Combat  )
+	if (Combat)
 	{
 		if (HasAuthority())
 		{
@@ -126,7 +150,6 @@ void ABlasterCharacter::EquipButtonPressed()
 		{
 			ServerEquipButtonPressed(); // Called without implementation, this is only for defining the function
 		}
-		
 	}
 }
 
@@ -151,7 +174,6 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 bool ABlasterCharacter::IsWeaponEquipped()
 {
 	return (Combat && Combat->EquippedWeapon);
-	
 }
 
 bool ABlasterCharacter::IsAiming()
@@ -161,10 +183,8 @@ bool ABlasterCharacter::IsAiming()
 
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
-	if (Combat==nullptr) return nullptr;
+	if (Combat == nullptr) return nullptr;
 	return Combat->EquippedWeapon;
-		
-	
 }
 
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
@@ -177,6 +197,8 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 
 void ABlasterCharacter::CrouchButtonPressed()
 {
+	
+	
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -185,7 +207,6 @@ void ABlasterCharacter::CrouchButtonPressed()
 	{
 		Crouch();
 	}
-	
 }
 
 void ABlasterCharacter::AimButtonPressed()
@@ -194,6 +215,8 @@ void ABlasterCharacter::AimButtonPressed()
 	{
 		Combat->SetAiming(true);
 	}
+	
+	
 }
 
 void ABlasterCharacter::AimButtonReleased()
@@ -207,56 +230,95 @@ void ABlasterCharacter::AimButtonReleased()
 void ABlasterCharacter::AimOffset(float DeltaTime)
 {
 	if (Combat && Combat->EquippedWeapon == nullptr) return;
-	
-	FVector Velocity=GetVelocity();
-	Velocity.Z=0.f;
-	float Speed=Velocity.Size();
+
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
-	if (Speed==0.f&& !bIsInAir) // == Standing still
+	if (Speed == 0.f && !bIsInAir) // == Standing still
 	{
-		FRotator CurrentAimRotation =  FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
-		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation,StartingAimRotation);
-		AO_YAW=DeltaAimRotation.Yaw;
-		bUseControllerRotationYaw=false;
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AO_YAW = DeltaAimRotation.Yaw;
+		if (TurningInPlace == ETurningInPlace::ETIP_NOTTURNING)
+		{
+			Interp_AO_YAW = AO_YAW;
+		}
+		bUseControllerRotationYaw = true;
 		TurnInPlace(DeltaTime);
 	}
-	if (Speed>0.f||bIsInAir) // Running or jumping
+	if (Speed > 0.f || bIsInAir) // Running or jumping
 	{
-		StartingAimRotation = FRotator(0.f,GetBaseAimRotation().Yaw,0.f);
-		AO_YAW=0.f;
-		bUseControllerRotationYaw=true;
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AO_YAW = 0.f;
+		bUseControllerRotationYaw = true;
 		TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
-		
-
 	}
-AO_PITCH = GetBaseAimRotation().Pitch; //Will malfunction on clients if not dealth with according to bitwise operations as angle values are compressed and then sent, when decompressed, value will be changed from negative to a bitwise compatible positive value
-	if (AO_PITCH>90.f && !IsLocallyControlled())
+	AO_PITCH = GetBaseAimRotation().Pitch;
+	//Will malfunction on clients if not dealth with according to bitwise operations as angle values are compressed and then sent, when decompressed, value will be changed from negative to a bitwise compatible positive value
+	if (AO_PITCH > 90.f && !IsLocallyControlled())
 	{
 		//map pitch from 270-360 to -90-0 >>>>>> the former value is what we get when angles are compressed and then sent over the network and decompressed>>>>>result, malfunction in pitch values of clients for users
-		FVector2d InRange(270.f,360.f);
-		FVector2d OutRange(-90.f,0.f);
-		AO_PITCH = FMath::GetMappedRangeValueClamped(InRange,OutRange,AO_PITCH);
+		FVector2d InRange(270.f, 360.f);
+		FVector2d OutRange(-90.f, 0.f);
+		AO_PITCH = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_PITCH);
 	}
 	/*if (HasAuthority() && !IsLocallyControlled())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AO_PITCH: %f"),AO_PITCH);
 	}*/
+}
+
+void ABlasterCharacter::Jump()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+		
+		
+	}
+	Super::Jump(); 
 	
 	
+}
+
+void ABlasterCharacter::FireButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(true);
+	}
+}
+
+void ABlasterCharacter::FireButtonReleased()
+{
+	if (Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
 }
 
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)
 {
 	// UE_LOG(LogTemp, Warning, TEXT("AO_YAW: %f"),AO_YAW);
-	if (AO_YAW>90.f)
+	if (AO_YAW > 90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_RIGHT;
 	}
-	else if (AO_YAW< -90.f)
+	else if (AO_YAW < -90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_LEFT;
-
+	}
+	if (TurningInPlace != ETurningInPlace::ETIP_NOTTURNING)
+	{
+		Interp_AO_YAW = FMath::FInterpTo(Interp_AO_YAW, 0, DeltaTime, 4.f);
+		AO_YAW = Interp_AO_YAW;
+		if (FMath::Abs(AO_YAW) < 15.f)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
+			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		}
 	}
 }
 

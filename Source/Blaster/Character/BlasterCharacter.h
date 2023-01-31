@@ -20,6 +20,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	void PlayFireMontage(bool bAiming);
 protected:
 	virtual void BeginPlay() override;
 
@@ -32,6 +33,9 @@ protected:
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void AimOffset(float DeltaTime);
+	virtual void Jump() override;
+	void FireButtonPressed();
+	void FireButtonReleased();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -54,9 +58,15 @@ private:
 
 	float AO_YAW;
 	float AO_PITCH;
+	float Interp_AO_YAW;
 	FRotator StartingAimRotation;
+	
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* FireWeaponMontage;
+	
 	
 UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated
@@ -70,6 +80,7 @@ public:
 	FORCEINLINE float GetAO_YAW() const {return AO_YAW;}
 	FORCEINLINE float GetAO_PITCH() const {return AO_PITCH;}
 	AWeapon* GetEquippedWeapon();
+	
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const {return TurningInPlace;}
 
 	
