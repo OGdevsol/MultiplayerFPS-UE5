@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
+#define TRACE_LENGTH 80000.f;
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -32,6 +33,18 @@ protected:
     UFUNCTION()
 	void OnRep_EquippedWeapon();
 	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(Server,Reliable)
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+	UFUNCTION(NetMulticast,Reliable)
+	void MultiCastFire(const FVector_NetQuantize& TraceHitTarget);
+
+	void GetViewport(FVector2D ViewportSize);
+	void TraceUnderCrosshairs(FHitResult& HitResult);
+
+	
+	
+	
 private:
 	class ABlasterCharacter* Character;
 
@@ -48,5 +61,9 @@ private:
 
 	bool bFirePressed;
 
+	FVector StartPosition;
+	FVector EndPosition;
+
+//	FVector HitTarget;
 public:
 };

@@ -25,7 +25,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void ShowPickupWidget(bool bShowWidget); //Get pickup widget and set its visibility in definition
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
-	void Fire();
+	virtual  void Fire(const FVector& HitTarget);
 
 protected:
 	virtual void BeginPlay() override;

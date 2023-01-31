@@ -45,6 +45,28 @@ ABlasterCharacter::ABlasterCharacter()
 	MinNetUpdateFrequency = 33.f;
 	//Optimized and widely used values for updating replications between server and clients for the game
 }
+/*void ABlasterCharacter::OffsetSocketForPlayer()
+{
+	
+	FVector CameraOffsetForPlayerAiming(0.f,75.f,75.f);
+	FVector CameraOffsetForPlayerNotAiming(0,0,0);
+	if (IsAiming())
+	{
+		
+		ABlasterCharacter* Character = this;
+		CameraOffsetForPlayerAiming = FMath::VInterpTo(CameraOffsetForPlayerNotAiming,CameraOffsetForPlayerAiming,2,500);
+		Character->CameraBoom->SocketOffset=CameraOffsetForPlayerAiming;
+	}
+	else
+	{
+		
+		ABlasterCharacter* Character = this;
+		CameraOffsetForPlayerNotAiming = FMath::VInterpTo(CameraOffsetForPlayerAiming,CameraOffsetForPlayerNotAiming,2,500);
+		Character->CameraBoom->SocketOffset=CameraOffsetForPlayerNotAiming;
+		
+	}
+	
+}*/
 
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -214,6 +236,8 @@ void ABlasterCharacter::AimButtonPressed()
 	if (Combat)
 	{
 		Combat->SetAiming(true);
+		//OffsetSocketForPlayer();
+		UE_LOG(LogTemp,Warning,TEXT("AIMING"))
 	}
 	
 	
@@ -224,6 +248,8 @@ void ABlasterCharacter::AimButtonReleased()
 	if (Combat)
 	{
 		Combat->SetAiming(false);
+	//	OffsetSocketForPlayer();
+		UE_LOG(LogTemp,Warning,TEXT("NotAiming"))
 	}
 }
 
@@ -297,6 +323,8 @@ void ABlasterCharacter::FireButtonReleased()
 		Combat->FireButtonPressed(false);
 	}
 }
+
+
 
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)

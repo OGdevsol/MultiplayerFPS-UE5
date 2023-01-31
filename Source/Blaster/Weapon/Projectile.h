@@ -20,9 +20,25 @@ protected:
 	virtual void BeginPlay() override;
 	void SetUpCollision();
 
+	UFUNCTION()
+	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit );
+
 private:
      UPROPERTY(EditAnywhere)
 	UBoxComponent* CollisionBox;
+
+	UPROPERTY(VisibleAnywhere)
+	class UProjectileMovementComponent* ProjectileMovementComponent;
+	
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* Tracer;
+    class UParticleSystemComponent* TracerComponent;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles;
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactSound;
+	
 
 public:	
 	

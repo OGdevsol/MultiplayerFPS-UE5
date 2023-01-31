@@ -36,6 +36,7 @@ protected:
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
+	//void OffsetSocketForPlayer();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)

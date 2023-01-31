@@ -2,17 +2,31 @@
 
 
 #include "Projectile.h"
+#include "Projectile_Weapon.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 AProjectile::AProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	SetUpCollision(); //Set up the properties for collision 
+	bReplicates = true;
+	SetUpCollision(); //Set up the properties for collision
+	 ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+	ProjectileMovementComponent->bRotationFollowsVelocity=true;
 }
 
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
+	if (Tracer)
+	{
+		TracerComponent = UGameplayStatics::SpawnEmitterAttached(Tracer,CollisionBox,FName(),GetActorLocation(),GetActorRotation(),EAttachLocation::KeepWorldPosition);
+	}
+	if (HasAuthority())
+	{
+		CollisionBox->OnComponentHit.AddDynamic(this,&AProjectile::OnHit);
+	}
 }
 
 void AProjectile::SetUpCollision()
@@ -26,6 +40,19 @@ void AProjectile::SetUpCollision()
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 
 	UE_LOG(LogTemp,Warning,TEXT("CollisionSetUpComplete"));
+}
+
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (ImpactParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ImpactParticles,GetActorTransform());
+	}
+	if (ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this,ImpactSound,GetActorLocation());
+	}
 }
 
 void AProjectile::Tick(float DeltaTime)
