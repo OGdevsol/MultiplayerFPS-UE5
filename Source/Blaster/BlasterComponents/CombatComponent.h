@@ -72,8 +72,23 @@ private:
 	//HUD
 	float CrosshairVelocityFactor;
 	float CrosshairAirVelocityFactor;
+    float CrosshairAimFactor;
+	float CrosshairShootingFactor;
+	
 	FVector HitTarget;
 
 //	FVector HitTarget;
+
+
+	//Aiming and FOV
+	float DefaultFOV; //When not aiming. Set to cam's base FOV in BeginPlay
+	UPROPERTY(EditAnywhere, Category=Combat)
+	float ZoomedFOV =30.f; //When aiming. Inifialized at 30.f, can be modified anywhere
+	UPROPERTY(EditAnywhere, Category=Combat)
+	float ZoomInterpSpeed=20.f;
+
+	void InterpFOV(float DeltaTime);
+
+	float CurrentFOV;
 public:
 };
