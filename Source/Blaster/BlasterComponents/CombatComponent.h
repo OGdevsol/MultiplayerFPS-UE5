@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 #define TRACE_LENGTH 80000.f;
@@ -42,11 +43,15 @@ protected:
 	void GetViewport(FVector2D ViewportSize);
 	void TraceUnderCrosshairs(FHitResult& HitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
+
 	
 	
 	
 private:
 	class ABlasterCharacter* Character;
+	class ABlasterPlayerController* Controller;
+	class ABlasterHUD* HUD;
 
 	UPROPERTY(ReplicatedUsing=OnRep_EquippedWeapon)
 	class AWeapon* EquippedWeapon;
@@ -63,6 +68,11 @@ private:
 
 	FVector StartPosition;
 	FVector EndPosition;
+
+	//HUD
+	float CrosshairVelocityFactor;
+	float CrosshairAirVelocityFactor;
+	FVector HitTarget;
 
 //	FVector HitTarget;
 public:

@@ -209,6 +209,12 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon()
 	return Combat->EquippedWeapon;
 }
 
+FVector ABlasterCharacter::GetHitTarget() const
+{
+	if (Combat == __nullptr) return FVector();
+	return  Combat->HitTarget;
+}
+
 void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)

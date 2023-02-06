@@ -26,6 +26,16 @@ public:
 	void ShowPickupWidget(bool bShowWidget); //Get pickup widget and set its visibility in definition
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
 	virtual  void Fire(const FVector& HitTarget);
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	class UTexture2D* CrosshairCenter;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsLeft;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsRight;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsTop;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsBottom;
 
 protected:
 	virtual void BeginPlay() override;
@@ -59,6 +69,13 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
+
+	//
+	// Textures for weapon crosshairs
+	//
+
+	
+	
 public:
 	
 	 void SetWeaponState(EWeaponState State);
