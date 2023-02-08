@@ -3,9 +3,11 @@
 
 #include "Projectile.h"
 #include "Projectile_Weapon.h"
+#include "Blaster/Character/BlasterCharacter.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
+#include "Blaster/Blaster.h"
 
 AProjectile::AProjectile()
 {
@@ -38,6 +40,7 @@ void AProjectile::SetUpCollision()
 	CollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
 
 	UE_LOG(LogTemp,Warning,TEXT("CollisionSetUpComplete"));
 }
@@ -45,7 +48,11 @@ void AProjectile::SetUpCollision()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if (BlasterCharacter)
+	{
+		BlasterCharacter->MultiCastHit();
+	}
 	Destroy();
 }
 

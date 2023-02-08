@@ -4,6 +4,7 @@
 #include "BlasterCharacter.h"
 
 #include "Animation/AnimNotifies/AnimNotify_PlaySound.h"
+#include "Blaster/Blaster.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
@@ -38,6 +39,7 @@ ABlasterCharacter::ABlasterCharacter()
 	//Designated to be replicating. Components dont neet to be registered to be replicated.
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera,ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility,ECR_Block);
 	TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
@@ -128,6 +130,18 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 	
+}
+
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if (Combat==nullptr || Combat->EquippedWeapon == nullptr) return;
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
 }
 
 
@@ -356,6 +370,11 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		}
 	}
+}
+
+void ABlasterCharacter::MultiCastHit_Implementation()
+{
+	PlayHitReactMontage();
 }
 
 void ABlasterCharacter::HideCam()
