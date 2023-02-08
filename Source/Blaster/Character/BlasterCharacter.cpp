@@ -81,6 +81,13 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 }
 
 
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0.f;
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -89,7 +96,21 @@ void ABlasterCharacter::BeginPlay()
 void ABlasterCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	AimOffset(DeltaTime);
+	if (GetLocalRole()>ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+
+	}
+	else
+	{
+		TimeSinceLastMovementReplication+=DeltaTime;
+		if (TimeSinceLastMovementReplication>0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
+	
 	HideCam();
 }
 
@@ -131,6 +152,8 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 	}
 	
 }
+
+
 
 void ABlasterCharacter::PlayHitReactMontage()
 {
@@ -275,16 +298,28 @@ void ABlasterCharacter::AimButtonReleased()
 	}
 }
 
+void ABlasterCharacter::CalculateAO_Pitch()
+{
+	AO_PITCH = GetBaseAimRotation().Pitch;
+	//Will malfunction on clients if not dealth with according to bitwise operations as angle values are compressed and then sent, when decompressed, value will be changed from negative to a bitwise compatible positive value
+	if (AO_PITCH > 90.f && !IsLocallyControlled())
+	{
+		//map pitch from 270-360 to -90-0 >>>>>> the former value is what we get when angles are compressed and then sent over the network and decompressed>>>>>result, malfunction in pitch values of clients for users
+		FVector2d InRange(270.f, 360.f);
+		FVector2d OutRange(-90.f, 0.f);
+		AO_PITCH = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_PITCH);
+	}
+}
+
 void ABlasterCharacter::AimOffset(float DeltaTime)
 {
 	if (Combat && Combat->EquippedWeapon == nullptr) return;
 
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.f;
-	float Speed = Velocity.Size();
+	float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 	if (Speed == 0.f && !bIsInAir) // == Standing still
 	{
+		bRotateRootBone=true;
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
 		AO_YAW = DeltaAimRotation.Yaw;
@@ -297,25 +332,63 @@ void ABlasterCharacter::AimOffset(float DeltaTime)
 	}
 	if (Speed > 0.f || bIsInAir) // Running or jumping
 	{
+		bRotateRootBone=false;
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AO_YAW = 0.f;
 		bUseControllerRotationYaw = true;
 		TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
 	}
-	AO_PITCH = GetBaseAimRotation().Pitch;
-	//Will malfunction on clients if not dealth with according to bitwise operations as angle values are compressed and then sent, when decompressed, value will be changed from negative to a bitwise compatible positive value
-	if (AO_PITCH > 90.f && !IsLocallyControlled())
-	{
-		//map pitch from 270-360 to -90-0 >>>>>> the former value is what we get when angles are compressed and then sent over the network and decompressed>>>>>result, malfunction in pitch values of clients for users
-		FVector2d InRange(270.f, 360.f);
-		FVector2d OutRange(-90.f, 0.f);
-		AO_PITCH = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_PITCH);
-	}
+	CalculateAO_Pitch();
 	/*if (HasAuthority() && !IsLocallyControlled())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AO_PITCH: %f"),AO_PITCH);
 	}*/
 }
+float ABlasterCharacter::CalculateSpeed()
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	return  Velocity.Size();
+}
+
+
+void ABlasterCharacter::SimProxiesTurn()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	bRotateRootBone=false;
+	float Speed = CalculateSpeed();
+	if (Speed>0.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
+        return ;
+	}
+	
+	//CalculateAO_Pitch();
+	ProxyRotationLastFrame = ProxyRotation;
+	ProxyRotation = GetActorRotation();
+	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation,ProxyRotationLastFrame).Yaw;
+	UE_LOG(LogTemp,Warning,TEXT("ProxyYaw: %f "), ProxyYaw);
+	if (FMath::Abs(ProxyYaw)>TurnThreshold)
+	{
+		if (ProxyYaw>TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_RIGHT;
+		}
+		else if (ProxyYaw < -TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_LEFT;
+
+		}
+		else
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
+
+		}
+		return;
+	}
+	TurningInPlace = ETurningInPlace::ETIP_NOTTURNING;
+}
+
 
 void ABlasterCharacter::Jump()
 {
@@ -398,6 +471,7 @@ void ABlasterCharacter::HideCam()
 		}
 	}
 }
+
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
