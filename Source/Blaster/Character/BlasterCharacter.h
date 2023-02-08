@@ -7,10 +7,12 @@
 #include "Blaster/TurningInPlace.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "GameFramework/Character.h"
+#include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
 
+
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter
+class BLASTER_API ABlasterCharacter : public ACharacter , public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -67,6 +69,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
+
+	void HideCam(); // Hide camera if player is close
+	UPROPERTY(EditAnywhere)
+	float CameraThreshold=200.f;
 	
 	
 UFUNCTION()

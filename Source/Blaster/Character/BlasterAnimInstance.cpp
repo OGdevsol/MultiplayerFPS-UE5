@@ -62,12 +62,15 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
-        FTransform RightHandTranform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"),RTS_World); //Convert from world space to bone space
-		RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTranform.GetLocation(),RightHandTranform.GetLocation() + RightHandTranform.GetLocation() - (BlasterCharacter->GetHitTarget()));
+      
 
 		if (BlasterCharacter->IsLocallyControlled())
 		{
 			bLocallyControlled = true;
+			FTransform RightHandTranform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"),RTS_World); //Convert from world space to bone space
+			FRotator LookatRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTranform.GetLocation(),RightHandTranform.GetLocation() + RightHandTranform.GetLocation() - (BlasterCharacter->GetHitTarget()));
+			RightHandRotation = UKismetMathLibrary::RInterpTo(RightHandRotation,LookatRotation,DeltaTime,20.f);
+			
 			FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("MuzzleFlash"),RTS_World);
 			FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetUnitAxis(EAxis::X));
 		}
