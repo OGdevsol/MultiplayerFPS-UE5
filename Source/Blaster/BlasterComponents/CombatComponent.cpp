@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "TimerManager.h"
 
 
 UCombatComponent::UCombatComponent()
@@ -18,8 +19,6 @@ UCombatComponent::UCombatComponent()
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
 }
-
-
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -114,7 +113,6 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 		}
 	}
 }
-
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
 	if (EquippedWeapon==nullptr)return;
@@ -133,7 +131,47 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 		
 	
 }
+void UCombatComponent::StartFireTimer()
+{
+	if (EquippedWeapon == nullptr || Character == nullptr) return;
+	Character->GetWorldTimerManager().SetTimer(FireTimer,this, &UCombatComponent::FireTimerFinished, EquippedWeapon->FireDelay);
+		
+	
+}
+void UCombatComponent::FireTimerFinished()
+{
+	if (EquippedWeapon == nullptr ) return;
+	bCanFire=true;
+	if (bFirePressed && EquippedWeapon-> bAutomatic)
+	{
+		Fire();
+	}
+}
+void UCombatComponent::Fire()
+{
+	/*if (bCanFire)
+	{
+		bCanFire=false;
+		ServerFire(HitTarget);
+		if (EquippedWeapon)
+		{
+			CrosshairShootingFactor = 0.80f;
+		}
+		StartFireTimer();
+	}*/
+	if (bCanFire)
+	{
+		//bCanFire=false;
+		ServerFire(HitTarget);
+		if (EquippedWeapon)
+		{
+			bCanFire=false;
+			CrosshairShootingFactor = 0.80f;
+		}
+		StartFireTimer();
+	}
 
+}
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	bAiming = bIsAiming; // Aim first then send server info
@@ -143,7 +181,6 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
 }
-
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	bAiming = bIsAiming;
@@ -152,7 +189,6 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
 }
-
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
@@ -161,26 +197,18 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		Character->bUseControllerRotationYaw = true;
 	}
 }
-
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
 	bFirePressed = bPressed;
 	if (bFirePressed)
 	{
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
-		ServerFire(HitResult.ImpactPoint);
-		if (EquippedWeapon)
-		{
-			CrosshairShootingFactor = 0.80f;
-		}
+		
+		Fire();
 	}
 }
-
 void UCombatComponent::GetViewport(FVector2D ViewportSize)
 {
 }
-
 void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
 	FVector2D ViewportSize;
@@ -223,14 +251,10 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 	
 }
-
-
-
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	MultiCastFire(TraceHitTarget);
 }
-
 void UCombatComponent::MultiCastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr)return;
@@ -241,18 +265,12 @@ void UCombatComponent::MultiCastFire_Implementation(const FVector_NetQuantize& T
 		EquippedWeapon->Fire(TraceHitTarget);
 	}
 }
-
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 }
-
-
-
-
-
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr)return;
@@ -270,3 +288,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
+
+
+
+
