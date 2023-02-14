@@ -23,9 +23,12 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-	UFUNCTION(NetMulticast,Unreliable)
- void MultiCastHit();
+	//UFUNCTION(NetMulticast,Unreliable)
+    //void MultiCastHit();
 	virtual void OnRep_ReplicatedMovement() override;
+	void Elim();
+	
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -44,6 +47,9 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* Damagetype, class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDHealth();
 
 	//void OffsetSocketForPlayer();
 	
@@ -103,7 +109,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 	
-	
+	class ABlasterPlayerController* BlasterPlayerController;
 	
 UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated

@@ -12,8 +12,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/GameMode/BlasterGameMode.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Misc/LowLevelTestAdapter.h"
 #include "Net/UnrealNetwork.h"
 
@@ -90,9 +92,29 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
+void ABlasterCharacter::Elim()
+{
+	
+}
+
+void ABlasterCharacter::UpdateHUDHealth()
+{
+	BlasterPlayerController = BlasterPlayerController== nullptr ? Cast<ABlasterPlayerController>(Controller) :BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController -> SetHUDHealth(Health,MaxHealth);
+	}
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	UpdateHUDHealth();
+	if (HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+	}
 }
 
 void ABlasterCharacter::Tick(float DeltaTime)
@@ -167,6 +189,26 @@ void ABlasterCharacter::PlayHitReactMontage()
 		FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* Damagetype,
+	AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health-Damage,0.f,MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+	if (Health<=0.f)
+	{
+		ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+
+		if (BlasterGameMode)
+		{
+			BlasterPlayerController = BlasterPlayerController==nullptr?Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatorController);
+		  BlasterGameMode->PlayerEliminated(this,BlasterPlayerController,AttackerController);
+		}
+	}
+	
 }
 
 
@@ -447,10 +489,10 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
-void ABlasterCharacter::MultiCastHit_Implementation()
+/*void ABlasterCharacter::MultiCastHit_Implementation()
 {
 	PlayHitReactMontage();
-}
+}*/
 
 void ABlasterCharacter::HideCam()
 {
@@ -477,6 +519,9 @@ void ABlasterCharacter::HideCam()
 
 void ABlasterCharacter::OnRep_Health()
 {
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+	
 	
 }
 
