@@ -15,6 +15,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Misc/LowLevelTestAdapter.h"
+#include "Net/UnrealNetwork.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -78,6 +79,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	// The class that has the replicated variable and the variable itself that is to be replicated ==== Starts off as null. Is to be set in the weapon class
+	DOREPLIFETIME(ABlasterCharacter , Health);
 }
 
 
@@ -472,6 +474,11 @@ void ABlasterCharacter::HideCam()
 	}
 }
 
+
+void ABlasterCharacter::OnRep_Health()
+{
+	
+}
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
