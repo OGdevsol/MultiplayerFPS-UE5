@@ -23,10 +23,14 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayElimMontage();
 	//UFUNCTION(NetMulticast,Unreliable)
     //void MultiCastHit();
-	virtual void OnRep_ReplicatedMovement() override;
 	void Elim();
+	virtual void OnRep_ReplicatedMovement() override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
 	
 
 protected:
@@ -84,6 +88,9 @@ private:
 	class UAnimMontage* FireWeaponMontage;
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* HitReactMontage;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* ElimMontage;
+ 
  
 
 	void HideCam(); // Hide camera if player is close
@@ -110,6 +117,14 @@ private:
 	void OnRep_Health();
 	
 	class ABlasterPlayerController* BlasterPlayerController;
+
+	bool bElimmed = false;
+
+	FTimerHandle ElimTImer;
+
+	void ElimTimerFinisher();
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 3.f;
 	
 UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated
@@ -130,6 +145,8 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera(){return FollowCamera;}
 
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
+
+	FORCEINLINE bool isElimmed() const {return bElimmed;}
 	
 
 };

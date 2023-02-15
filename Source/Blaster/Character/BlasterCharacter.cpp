@@ -91,10 +91,25 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	SimProxiesTurn();
 	TimeSinceLastMovementReplication = 0.f;
 }
-
 void ABlasterCharacter::Elim()
 {
-	
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(ElimTImer,this,&ABlasterCharacter::ElimTimerFinisher,ElimDelay);
+}
+
+void ABlasterCharacter::MulticastElim_Implementation()
+{
+	bElimmed=true;
+	PlayElimMontage();
+}
+
+void ABlasterCharacter::ElimTimerFinisher()
+{
+	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
+	if (BlasterGameMode)
+	{
+		BlasterGameMode->RequestForRespawning(this,Controller);
+	}
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
@@ -176,6 +191,18 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 	}
 	
 }
+
+void ABlasterCharacter::PlayElimMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && ElimMontage)
+	{
+
+		
+		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
 
 
 
@@ -524,6 +551,8 @@ void ABlasterCharacter::OnRep_Health()
 	
 	
 }
+
+
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
