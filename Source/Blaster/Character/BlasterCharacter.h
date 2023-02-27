@@ -9,6 +9,7 @@
 #include "GameFramework/Character.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
+#include "Sound/SoundCue.h"
 #include "BlasterCharacter.generated.h"
 
 
@@ -144,7 +145,16 @@ private:
     UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // Dynamic instance that is changed on runtime
 	UPROPERTY(EditAnywhere, Category=Elim)
 	UMaterialInstance* DissolveMaterialInstance;// set on BP to be used with dynamic material instance
-	
+	//
+	//Eliminiation Bot
+	//
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimbotEffect;
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* ElimBotSound;
 UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated
 

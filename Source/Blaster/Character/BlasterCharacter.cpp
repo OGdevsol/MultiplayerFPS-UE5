@@ -16,6 +16,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/LowLevelTestAdapter.h"
 #include "Net/UnrealNetwork.h"
 
@@ -95,6 +96,10 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 }
 void ABlasterCharacter::Elim()
 {
+	if (Combat&&Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Dropped();
+	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTImer,this,&ABlasterCharacter::ElimTimerFinisher,ElimDelay);
 }
@@ -103,6 +108,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 {
 	bElimmed=true;
 	PlayElimMontage();
+	//	Start dissolve effect
 	if (DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance,this);
@@ -112,6 +118,27 @@ void ABlasterCharacter::MulticastElim_Implementation()
 
 	}
 	StartDissolve();
+
+	//Disable Character Movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (BlasterPlayerController)
+	{
+		DisableInput(BlasterPlayerController);
+		
+	}
+	//Disable mandatory collisions
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (ElimbotEffect)
+	{
+		FVector ElimbotSpawnPoint(GetActorLocation().X,GetActorLocation().Y,GetActorLocation().Z);
+		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ElimbotEffect,ElimbotSpawnPoint,GetActorRotation());
+	}
+	if (ElimBotSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this,ElimBotSound,GetActorLocation());
+	}
 }
 
 void ABlasterCharacter::ElimTimerFinisher()

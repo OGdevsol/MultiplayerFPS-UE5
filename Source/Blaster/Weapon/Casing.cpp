@@ -37,6 +37,7 @@ void ACasing::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 		UE_LOG(LogTemp,Warning,TEXT("SHELL EJECTED"));
 	}
 	Destroy();
+	
 }
 
 

@@ -26,6 +26,7 @@ public:
 	void ShowPickupWidget(bool bShowWidget); //Get pickup widget and set its visibility in definition
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
 	virtual  void Fire(const FVector& HitTarget);
+	void Dropped();
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	class UTexture2D* CrosshairCenter;
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
