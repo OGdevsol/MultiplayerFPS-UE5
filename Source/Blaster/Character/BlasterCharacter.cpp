@@ -19,6 +19,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/LowLevelTestAdapter.h"
 #include "Net/UnrealNetwork.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 ABlasterCharacter::ABlasterCharacter()
@@ -132,7 +133,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	if (ElimbotEffect)
 	{
-		FVector ElimbotSpawnPoint(GetActorLocation().X,GetActorLocation().Y,GetActorLocation().Z);
+		FVector ElimbotSpawnPoint(GetActorLocation().X,GetActorLocation().Y,GetActorLocation().Z+300);
 		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),ElimbotEffect,ElimbotSpawnPoint,GetActorRotation());
 	}
 	if (ElimBotSound)
@@ -148,6 +149,7 @@ void ABlasterCharacter::ElimTimerFinisher()
 	{
 		BlasterGameMode->RequestForRespawning(this,Controller);
 	}
+	
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
@@ -157,6 +159,16 @@ void ABlasterCharacter::UpdateHUDHealth()
 	{
 		BlasterPlayerController -> SetHUDHealth(Health,MaxHealth);
 	}
+}
+
+void ABlasterCharacter::Destroyed()
+{
+	Super::Destroyed();
+	if (ElimBotComponent)
+	{
+		ElimBotComponent->DestroyComponent();
+	}
+	
 }
 
 void ABlasterCharacter::BeginPlay()
