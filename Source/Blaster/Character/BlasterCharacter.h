@@ -57,6 +57,7 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* Damagetype, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
+	void PollInitialize();
 
 	//void OffsetSocketForPlayer();
 	
@@ -156,6 +157,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* ElimBotSound;
+
+	class ABlasterPlayerState* BlasterPlayerState;
 UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Gets called automatically when a designated variable is replicated // This function can only have an input parameter of the type of the variable being replicated
 
