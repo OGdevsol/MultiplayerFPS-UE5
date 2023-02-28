@@ -64,7 +64,9 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, Ammo);
 }
+
 
 void AWeapon::Fire(const FVector& HitTarget)
 {
@@ -89,6 +91,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			
 		}
 	}
+	SpendRound();
 }
 
 void AWeapon::Dropped()
@@ -97,6 +100,8 @@ void AWeapon::Dropped()
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld,true);
 	WeaponMesh->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
+	BlasterOwnerCharacter=nullptr;
+	BlasterOwnerController = nullptr;
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -119,6 +124,50 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 		BlasterCharacter->SetOverlappingWeapon(nullptr);
 	}
 }
+
+
+void AWeapon::SetHUDAmmo()
+{
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if (BlasterOwnerCharacter)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+		if (BlasterOwnerController )
+		{
+			BlasterOwnerController->SetHUDWeaponAmmo(Ammo);
+		}
+	}
+}
+void AWeapon::SpendRound()
+{
+	Ammo=FMath::Clamp(Ammo -1,0,MagCapacity);
+	
+	SetHUDAmmo();
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	SetHUDAmmo();
+}
+
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if (Owner == nullptr)
+	{
+		BlasterOwnerController= nullptr;
+		BlasterOwnerCharacter = nullptr;
+	}
+	else
+	{
+		SetHUDAmmo();
+	}
+}
+
+
+
 void AWeapon::SetWeaponState(EWeaponState State)
 {
 WeaponState = State;
@@ -144,6 +193,9 @@ WeaponState = State;
 		break;
 	}
 }
+
+
+
 void AWeapon::OnRep_WeaponState()
 {
 	switch (WeaponState)
@@ -171,4 +223,8 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
 	}
+}
+bool AWeapon::IsEmpty()
+{
+	return Ammo<=0;
 }

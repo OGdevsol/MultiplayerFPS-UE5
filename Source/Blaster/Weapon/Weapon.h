@@ -25,6 +25,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void ShowPickupWidget(bool bShowWidget); //Get pickup widget and set its visibility in definition
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&  OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
 	virtual  void Fire(const FVector& HitTarget);
 	void Dropped();
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
@@ -85,6 +87,23 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
+	UPROPERTY(EditAnywhere , ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+	
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+
+	UPROPERTY()
+	class ABlasterCharacter* BlasterOwnerCharacter;
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterOwnerController;
+	
+
 	//
 	// Textures for weapon crosshairs
 	//
@@ -100,5 +119,5 @@ public:
 
 	FORCEINLINE float GetZoomedFOV()const{return ZoomedFOV;}
 	FORCEINLINE float GetZoomedInterpSpeed() const {return ZoomedInterpSpeed;}
- 
+bool IsEmpty(); 
 };

@@ -19,6 +19,8 @@ UCombatComponent::UCombatComponent()
 	BaseWalkSpeed = 600.f;
 	AimWalkSpeed = 450.f;
 }
+
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -147,6 +149,15 @@ void UCombatComponent::FireTimerFinished()
 		Fire();
 	}
 }
+
+bool UCombatComponent::CanFire()
+{
+	if (EquippedWeapon == nullptr) return false;
+	
+		return !EquippedWeapon->IsEmpty() || !bCanFire;
+	
+}
+
 void UCombatComponent::Fire()
 {
 	/*if (bCanFire)
@@ -159,7 +170,7 @@ void UCombatComponent::Fire()
 		}
 		StartFireTimer();
 	}*/
-	if (bCanFire)
+	if (CanFire())
 	{
 		//bCanFire=false;
 		ServerFire(HitTarget);
@@ -172,6 +183,11 @@ void UCombatComponent::Fire()
 	}
 
 }
+
+ 
+
+
+
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	bAiming = bIsAiming; // Aim first then send server info
@@ -283,6 +299,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr)return;
 
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Dropped();
+	}
 	EquippedWeapon = WeaponToEquip;
 
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
@@ -293,6 +313,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetHUDAmmo();
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }

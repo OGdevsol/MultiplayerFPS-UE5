@@ -25,6 +25,9 @@ public:
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
+
+	
+
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -106,7 +109,8 @@ private:
 
 	void StartFireTimer();
 	void FireTimerFinished();
-
+	
+bool CanFire();
 	
 	float CurrentFOV;
 public:
