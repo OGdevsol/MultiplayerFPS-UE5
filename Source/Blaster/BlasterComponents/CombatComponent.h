@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/CombatState.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/Weapon/WeaponTypes.h"
@@ -25,7 +26,10 @@ public:
 	
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void Reload();
 
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 	
 
@@ -51,8 +55,11 @@ protected:
 
 	void SetHUDCrosshairs(float DeltaTime);
 
+	UFUNCTION(Server,Reliable)
+	void ServerReload();
+
 	
-	
+	void HandleReload();
 	
 private:
 	UPROPERTY()
@@ -122,6 +129,12 @@ bool CanFire();
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo;
 	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
 	
 	float CurrentFOV;
 public:
