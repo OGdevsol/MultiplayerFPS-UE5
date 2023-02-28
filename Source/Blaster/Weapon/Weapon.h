@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WeaponTypes.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
@@ -102,8 +103,9 @@ private:
 	class ABlasterCharacter* BlasterOwnerCharacter;
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterOwnerController;
-	
 
+	UPROPERTY()
+EWeaponType WeaponType;
 	//
 	// Textures for weapon crosshairs
 	//
@@ -119,5 +121,6 @@ public:
 
 	FORCEINLINE float GetZoomedFOV()const{return ZoomedFOV;}
 	FORCEINLINE float GetZoomedInterpSpeed() const {return ZoomedInterpSpeed;}
+	FORCEINLINE EWeaponType GetWeaponType() const{return WeaponType ;}
 bool IsEmpty(); 
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 #define TRACE_LENGTH 80000.f;
@@ -111,6 +112,16 @@ private:
 	void FireTimerFinished();
 	
 bool CanFire();
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo; // For currently equipped weapon
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+	TMap<EWeaponType,int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo;
+	void InitializeCarriedAmmo();
 	
 	float CurrentFOV;
 public:
