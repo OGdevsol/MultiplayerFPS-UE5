@@ -20,6 +20,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Misc/LowLevelTestAdapter.h"
 #include "Blaster/CombatState.h"
+#include "CombatState.generated.h"
 #include "Net/UnrealNetwork.h"
 #include "Particles/ParticleSystemComponent.h"
 
@@ -259,7 +260,7 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim"): FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
-		AnimInstance->Montage_Play(ReloadMontage);
+		//AnimInstance->Montage_Play(ReloadMontage);
 	}
 	
 }
@@ -270,12 +271,14 @@ void ABlasterCharacter::PlayReloadMontage()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && ReloadMontage)
 	{
+		
 		AnimInstance->Montage_Play(ReloadMontage);
 		FName SectionName;
 		switch (Combat->EquippedWeapon->GetWeaponType())
 		{
 		case EWeaponType::EWT_AssaultRifle:
 
+			
 			SectionName = FName("Rifle");
 			break;
 		}

@@ -9,8 +9,10 @@
 #include "GameFramework/Character.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
+#include "Blaster/CombatState.h"
 #include "Sound/SoundCue.h"
 #include "BlasterCharacter.generated.h"
+
 
 
 UCLASS()
@@ -76,7 +78,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UCombatComponent* Combat;
 
 	UFUNCTION(Server,Reliable) // RPC for functions called on clients but executed on server
@@ -188,7 +190,7 @@ public:
 	FORCEINLINE bool isElimmed() const {return bElimmed;}
 	FORCEINLINE float GetHealth() const {return Health;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
-	ECombatState CombatState;
+	//ECombatState CombatState;
 	ECombatState GetCombatStatee() const;
 	
 

@@ -30,6 +30,7 @@ public:
 	void SetHUDAmmo();
 	virtual  void Fire(const FVector& HitTarget);
 	void Dropped();
+	void AddAmmo(int32 AmmoToAdd);
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	class UTexture2D* CrosshairCenter;
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
@@ -54,6 +55,8 @@ public:
 	float FireDelay=.10f;
 	UPROPERTY(EditAnywhere,Category = Combat)
 	bool bAutomatic=true;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+	class USoundCue* EquipSound;
 
 protected:
 	virtual void BeginPlay() override;
@@ -122,5 +125,7 @@ public:
 	FORCEINLINE float GetZoomedFOV()const{return ZoomedFOV;}
 	FORCEINLINE float GetZoomedInterpSpeed() const {return ZoomedInterpSpeed;}
 	FORCEINLINE EWeaponType GetWeaponType() const{return WeaponType ;}
-bool IsEmpty(); 
+bool IsEmpty();
+	FORCEINLINE int32 GetAmmo() const {return Ammo;}
+	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
 };

@@ -60,6 +60,8 @@ protected:
 
 	
 	void HandleReload();
+
+	int32 AmountToReload();
 	
 private:
 	UPROPERTY()
@@ -135,7 +137,8 @@ bool CanFire();
 
 	UFUNCTION()
 	void OnRep_CombatState();
-	
+
+	void UpdateAmmoValues();
 	float CurrentFOV;
 public:
 };
