@@ -37,6 +37,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 	virtual void Destroyed() override;
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
 	
 
 protected:
@@ -62,6 +65,8 @@ protected:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* Damagetype, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
 	void PollInitialize();
+
+	void RotateInPlace(float DeltaTime);
 
 	//void OffsetSocketForPlayer();
 	
@@ -192,6 +197,6 @@ public:
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
 	//ECombatState CombatState;
 	ECombatState GetCombatStatee() const;
-	
-
+	FORCEINLINE UCombatComponent* GetCombat() const {return Combat;}
+FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 };
