@@ -107,7 +107,7 @@ private:
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterOwnerController;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 EWeaponType WeaponType;
 	//
 	// Textures for weapon crosshairs
