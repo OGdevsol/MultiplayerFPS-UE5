@@ -16,7 +16,7 @@ public:
 	AProjectile();
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
-
+	
 protected:
 	virtual void BeginPlay() override;
 	void SetUpCollision();
@@ -26,23 +26,29 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
 
-private:
-     UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere)
+	class UParticleSystem* ImpactParticles;
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactSound;
+	UPROPERTY(EditAnywhere)
 	UBoxComponent* CollisionBox;
-
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
+
+
+
+
+private:
+  
+
+	
 	
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer;
 	UPROPERTY()
     class UParticleSystemComponent* TracerComponent;
 
-	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles;
-	UPROPERTY(EditAnywhere)
-	class USoundCue* ImpactSound;
-
+	
 	
 	
 

@@ -4,7 +4,6 @@
 #include "Projectile.h"
 #include "Projectile_Weapon.h"
 #include "Blaster/Character/BlasterCharacter.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Blaster/Blaster.h"
@@ -14,8 +13,7 @@ AProjectile::AProjectile()
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 	SetUpCollision(); //Set up the properties for collision
-	 ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
-	ProjectileMovementComponent->bRotationFollowsVelocity=true;
+	
 }
 
 void AProjectile::BeginPlay()
@@ -29,6 +27,7 @@ void AProjectile::BeginPlay()
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this,&AProjectile::OnHit);
 	}
+	
 }
 
 void AProjectile::SetUpCollision()
