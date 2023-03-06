@@ -141,6 +141,8 @@ bool CanFire();
 	int32 StartingSMGlAmmo=0;
 	UPROPERTY(EditAnywhere)
 	int32 StartingShotgunlAmmo=0;
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperlAmmo=0;
 	void InitializeCarriedAmmo();
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
