@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -143,7 +143,10 @@ bool CanFire();
 	int32 StartingShotgunlAmmo=0;
 	UPROPERTY(EditAnywhere)
 	int32 StartingSniperlAmmo=0;
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo=0;
 	void InitializeCarriedAmmo();
+	
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;

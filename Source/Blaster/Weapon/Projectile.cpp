@@ -1,7 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ #include "Projectile.h"
 
-
-#include "Projectile.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Projectile_Weapon.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -30,6 +29,14 @@ void AProjectile::BeginPlay()
 	
 }
 
+void AProjectile::StartDestroyTimer()
+{
+
+	GetWorldTimerManager().SetTimer(DestroyTimer,this,&AProjectile::DestroyTimerFinisher,DestroyTime);
+}
+
+
+
 void AProjectile::SetUpCollision()
 {
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision Box"));
@@ -44,11 +51,43 @@ void AProjectile::SetUpCollision()
 	UE_LOG(LogTemp,Warning,TEXT("CollisionSetUpComplete"));
 }
 
-void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+ void AProjectile::ExplodeDamage()
+ {
+	
+	APawn* FiringPawn = GetInstigator();
+	if (FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(this,
+				Damage,// Base Damage
+				10.f, // Min Dmg
+				GetActorLocation(), // Origin
+				InnerRadius, // Dmg Inner Radius
+				OuterRadius, // Dmg Outer Radius
+				1.f, //Damage Falloff
+				UDamageType::StaticClass(), //DamageTypeClass
+				TArray<AActor*>(), // Actors to be ignored
+				this , // Causer
+				FiringController);//Instigator Controller
+		}
+	}
+ }
+
+ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+                         FVector NormalImpulse, const FHitResult& Hit)
 {
 	
 	Destroy();
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if (TrailSystem)
+	{
+		TrailSystemComponent =	UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem,GetRootComponent(),FName(),GetActorLocation(),GetActorRotation(),EAttachLocation::KeepWorldPosition,false);
+	}
 }
 
 void AProjectile::Tick(float DeltaTime)
@@ -56,6 +95,10 @@ void AProjectile::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AProjectile::DestroyTimerFinisher()
+{
+	Destroy();
+}
 void AProjectile::Destroyed()
 {
 	Super::Destroyed();
