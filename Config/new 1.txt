@@ -1,0 +1,53 @@
+1) firstly create the base
+2)create the tmap
+3)determine the oldest player using some external functionality
+4) removethe oldest player
+5)add the user using the add user method
+
+
+Tmap<int32,string> UserMapWithIds; // Map with user id and name
+Tmap<int32,string> UserIdsAndTimePassed; // Map with user id and name
+
+// iterate through the tmap using a function to determine the oldest player.
+
+
+
+
+void AddPlayerSession(string PlayerName, int UniqueSessionID)
+
+{
+if	(!serverMaxCap)
+{
+
+  UserMapWithIds.Add(UniqueSessionID, PlayerName)
+
+}
+
+else 
+{
+ 
+ 
+ CheckOldestPlayerAndRemove()
+
+
+}
+
+
+
+
+
+
+}
+
+
+void CheckOldestPlayerAndRemove()
+{
+  float TimeStore[];
+for(i=0;i<playersInServer;i++)
+{
+   if GetterDataFromThePlayers[i].timepassed > elementsInTimeStore
+   removePlayer()
+}
+
+
+}
